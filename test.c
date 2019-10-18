@@ -75,7 +75,6 @@ char *which(char *command, char *path)
 			{
 				char *returnString = calloc(strlen(pathOfCommand)+1, sizeof(char));
 				strncpy(returnString, pathOfCommand, strlen(pathOfCommand));
-				free(returnString);
 				return returnString;
 			}
 			result = strtok( NULL, delim );
@@ -87,17 +86,21 @@ char *which(char *command, char *path)
 int main(int argc, char const *argv[])
 {
 	char *s = getenv("PATH");
-	char *cmd = "mkdir";
+	char *cmd = "ls";
 
-	printf("%s\n", which(cmd, s));
-
-	printf("%s\n", which("ls", s));
-
-	printf("%s\n", which("pwd", s));
-
-	printf("%s\n", which("clear", s));
-
-	printf("%s\n", which("", s));
+	// printString(which(cmd, s));
+	if (which("a", s) != NULL)
+	{
+		printString(":P");
+	} else
+	{
+		printString("NULL");
+	}
+	// printString(which("mkdir", s));
+	// printString(which("rm", s));
+	// printString(which("kill", s));
+	// printString(which("nice", s));
+	// printString(which("which", s));
 
     return 0;
 }

@@ -57,35 +57,47 @@ int sh(int argc, char **argv, char **envp)
 		printf("[%s]> ", prompt);
 		len = readInput(buffer);
 		/* get command line and process */
-		char *commandline = calloc(len, sizeof(char));
-		strcpy(commandline, buffer);
-		tuple_t tuple = stringToArray(commandline);
 
-		/* check for each built in command and implement */
-		if (strcmp(tuple.arguments[0], "exit") == 0)
-			exit(0);
+		if (len > 1)
+		{
+			char *commandline = calloc(len, sizeof(char));
+			strcpy(commandline, buffer);
+			tuple_t tuple = stringToArray(commandline);
 
-		/*  else  program to exec */
-		// if (which(tuple.arguments[0])) {
-		// 	/* find it */
-		// 	/* do fork(), execve() and waitpid() */
+			// /* check for each built in command and implement */
+			if (strcmp(tuple.arguments[0], "exit") == 0)
+				exit(0);
 
-		// 	/* else */
-		// 	/* fprintf(stderr, "%s: Command not found.\n", args[0]); */
+			/*  else  program to exec */
+			if (which(tuple.arguments[0], s) != NULL)
+			{
+				printf("%s\n", which(tuple.arguments[0], s));
+				/* find it */
+				/* do fork(), execve() and waitpid() */
+				/* else */
+				/* fprintf(stderr, "%s: Command not found.\n", args[0]); */
 
-		// 	pid_t pid;
-		// 	int status;
+				pid_t pid;
+				int status;
 
-		// 	if ((pid = fork()) == 0)
-		// 	{
-				
-		// 	} else 
-		// 	{
-				
-		// 	}
-		// }
-		printString(tuple.arguments[0]);
-		printString(which(tuple.arguments[0], s));
+				if ((pid = fork()) == 0)
+				{
+					if (execvp(tuple.arguments[0], tuple.arguments) < 0)
+					{
+						printf("error executing exec");
+						exit(EXIT_FAILURE);
+					}
+				}
+				else
+				{
+					while (wait(&status) != pid);
+					
+				}
+			} else 
+			{
+				printf("command not found\n");
+			}
+		}
 	}
 	return 0;
 } /* sh() */
@@ -101,19 +113,18 @@ char *which(char *command, char *path)
 	strcpy(copyPath, path);
 	if (strcmp(command, "") != 0)
 	{
-		result = strtok( copyPath, delim );
+		result = strtok(copyPath, delim);
 		while (result != NULL)
 		{
-			char pathOfCommand[strlen(result)+strlen(command)];
+			char pathOfCommand[strlen(result) + strlen(command)];
 			sprintf(pathOfCommand, "%s/%s", result, command);
 			if (access(pathOfCommand, F_OK) == 0)
 			{
-				char *returnString = calloc(strlen(pathOfCommand)+1, sizeof(char));
+				char *returnString = calloc(strlen(pathOfCommand) + 1, sizeof(char));
 				strncpy(returnString, pathOfCommand, strlen(pathOfCommand));
-				free(returnString);
 				return returnString;
 			}
-			result = strtok( NULL, delim );
+			result = strtok(NULL, delim);
 		}
 	}
 	return NULL;
@@ -151,7 +162,7 @@ tuple_t stringToArray(char *input)
 	char buff[BUFFER_SIZE];
 	strcpy(buff, input);
 	char *t = strtok(buff, " "); // this returns the first word (if empty string it returns NULL)
-	int count;
+	int count = 0;
 
 	// call strtok over and over until you determine how long it is
 	while (strtok(NULL, " "))
