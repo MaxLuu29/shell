@@ -14,7 +14,7 @@ char *where(char *command, char *path);
 void list (char *dir);
 void printenv(char **envp);
 char readInput(char *buffer);
-tuple_t stringToArray(char *input);
+tuple_t *stringToArray(char *input);
 
 #define PROMPTMAX 32
 #define MAXARGS 10

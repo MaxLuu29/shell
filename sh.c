@@ -51,6 +51,7 @@ int sh(int argc, char **argv, char **envp)
 	int len;
 	// char *path = getevn("PATH");
 	char *s = getenv("PATH");
+	const char *S = getenv("PATH");
 	while (go)
 	{
 		/* print your prompt */
@@ -62,16 +63,29 @@ int sh(int argc, char **argv, char **envp)
 		{
 			char *commandline = calloc(len, sizeof(char));
 			strcpy(commandline, buffer);
-			tuple_t tuple = stringToArray(commandline);
+			tuple_t *tuple = stringToArray(commandline);
 
+			printf("%d\n", tuple->count);
+
+			for (int i = 0; i < tuple->count; i++)
+			{
+				if (tuple->arguments[i] == NULL)
+				{
+					printf("NULLLLLLLLLLLLLLL\n");
+				} else
+				{
+					printf("%s\n", tuple->arguments[i]);
+				}
+				
+				
+			}
 			// /* check for each built in command and implement */
-			if (strcmp(tuple.arguments[0], "exit") == 0)
+			if (strcmp(tuple->arguments[0], "exit") == 0)
 				exit(0);
 
 			/*  else  program to exec */
-			if (which(tuple.arguments[0], s) != NULL)
+			if (which(tuple->arguments[0], s) != NULL)
 			{
-				printf("%s\n", which(tuple.arguments[0], s));
 				/* find it */
 				/* do fork(), execve() and waitpid() */
 				/* else */
@@ -82,7 +96,7 @@ int sh(int argc, char **argv, char **envp)
 
 				if ((pid = fork()) == 0)
 				{
-					if (execvp(tuple.arguments[0], tuple.arguments) < 0)
+					if (execvp(*(tuple->arguments), tuple->arguments) < 0)
 					{
 						printf("error executing exec");
 						exit(EXIT_FAILURE);
@@ -154,12 +168,12 @@ char readInput(char *buffer)
 	return length;
 }
 
-tuple_t stringToArray(char *input)
+tuple_t *stringToArray(char *input)
 {
-	tuple_t tup;
+	tuple_t *tup = malloc(sizeof(tuple_t));
 
 	// make a copy of array
-	char buff[BUFFER_SIZE];
+	char buff[BUFFER_SIZE] = "";
 	strcpy(buff, input);
 	char *t = strtok(buff, " "); // this returns the first word (if empty string it returns NULL)
 	int count = 0;
@@ -170,8 +184,7 @@ tuple_t stringToArray(char *input)
 		count++;
 	}
 
-	char **argv = malloc((count + 1) * sizeof(char *));
-	argv[count] = NULL;
+	char **argv = calloc((count + 1) , sizeof(*argv));
 
 	count = 0;
 	strcpy(buff, input);
@@ -186,8 +199,8 @@ tuple_t stringToArray(char *input)
 		t = strtok(NULL, " ");
 	}
 
-	tup.arguments = argv;
-	tup.count = count;
+	tup->arguments = argv;
+	tup->count = count;
 
 	return tup;
 }
