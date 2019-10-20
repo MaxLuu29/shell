@@ -76,9 +76,25 @@ char **stringToArray(char *input)
 // 	return NULL;
 // }
 
+char readInput(char *buffer)
+{
+	char length = 0;
+	if (fgets(buffer, 128, stdin) != 0)
+	{
+		length = strlen(buffer);
+		buffer[length - 1] = '\0';
+	}
+	return length;
+}
+
 int main(int argc, char const *argv[])
 {
-	char** argument = stringToArray("ls -a -l");
-	execvp(*argument, argument);
+	char input[128];
+	char *prompt = calloc(32, sizeof(char));
+	prompt = "";
+	readInput(input);
+	strcpy(prompt, input);
+
+	printf("%s\n", prompt);
 	return 0;
 }

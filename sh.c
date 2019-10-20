@@ -20,11 +20,11 @@ int sh(int argc, char **argv, char **envp)
 {
 	char *prompt = calloc(PROMPTMAX, sizeof(char));
 	char *command, *arg, *commandpath, *p, *pwd, *owd;
-	char **args = calloc(MAXARGS, sizeof(char *));
+	// char **args = calloc(MAXARGS, sizeof(char *));
 	int uid, i, status, argsct, go = 1;
 	struct passwd *password_entry;
 	char *homedir;
-	struct pathelement *pathlist;
+	// struct pathelement *pathlist;
 
 	uid = getuid();
 	password_entry = getpwuid(uid);   /* get passwd info */
@@ -39,10 +39,9 @@ int sh(int argc, char **argv, char **envp)
 
 	owd = calloc(strlen(pwd) + 1, sizeof(char));
 	memcpy(owd, pwd, strlen(pwd));
-	prompt = "";
 
 	/* Put PATH into a linked list */
-	pathlist = get_path();
+	// pathlist = get_path();
 
 	char buffer[BUFFER_SIZE];
 	int len;
@@ -75,11 +74,29 @@ int sh(int argc, char **argv, char **envp)
 			{
 				printf("\tInput prompt prefix: ");
 				int length = readInput(buffer);
-				printString(buffer);
+				if (length >= PROMPTMAX)
+				{
+					perror("invalid size");
+				}
+				else
+				{
+					strcpy(prompt, buffer);
+				}
+				
+				
 			}
 			else if (strcmp(tuple->arguments[0], "where") == 0)
 			{
-				where(tuple->arguments[1], environmentString);
+				if(tuple->arguments[1] != NULL)
+				{
+					int i = 1;
+					while (tuple->arguments[i] != NULL)
+					{
+						where(tuple->arguments[i], environmentString);
+						i++;
+					}
+					
+				}
 			}
 			else
 			{
