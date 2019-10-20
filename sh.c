@@ -39,10 +39,7 @@ int sh(int argc, char **argv, char **envp)
 
 	owd = calloc(strlen(pwd) + 1, sizeof(char));
 	memcpy(owd, pwd, strlen(pwd));
-	prompt[0] = ' ';
-
-	strncpy(prompt + 1, pwd, PROMPTMAX - 1);
-	prompt[PROMPTMAX - 1] = (char)0;
+	prompt = "";
 
 	/* Put PATH into a linked list */
 	pathlist = get_path();
@@ -50,12 +47,12 @@ int sh(int argc, char **argv, char **envp)
 	char buffer[BUFFER_SIZE];
 	int len;
 	// char *path = getevn("PATH");
-	char *s = getenv("PATH");
-	const char *S = getenv("PATH");
+	char *environmentString = getenv("PATH");
+
 	while (go)
 	{
 		/* print your prompt */
-		printf("[%s]> ", prompt);
+		printf("%s [%s]> ", prompt, pwd);
 		len = readInput(buffer);
 		/* get command line and process */
 
@@ -65,51 +62,54 @@ int sh(int argc, char **argv, char **envp)
 			strcpy(commandline, buffer);
 			tuple_t *tuple = stringToArray(commandline);
 
-			printf("%d\n", tuple->count);
-
-			for (int i = 0; i < tuple->count; i++)
-			{
-				if (tuple->arguments[i] == NULL)
-				{
-					printf("NULLLLLLLLLLLLLLL\n");
-				} else
-				{
-					printf("%s\n", tuple->arguments[i]);
-				}
-				
-				
-			}
 			// /* check for each built in command and implement */
 			if (strcmp(tuple->arguments[0], "exit") == 0)
-				exit(0);
-
-			/*  else  program to exec */
-			if (which(tuple->arguments[0], s) != NULL)
 			{
-				/* find it */
-				/* do fork(), execve() and waitpid() */
-				/* else */
-				/* fprintf(stderr, "%s: Command not found.\n", args[0]); */
-
-				pid_t pid;
-				int status;
-
-				if ((pid = fork()) == 0)
+				exit(0);
+			}
+			else if (strcmp(tuple->arguments[0], "pid") == 0)
+			{
+				printf("%d\n", (int)getpid());
+			}
+			else if (strcmp(tuple->arguments[0], "prompt") == 0)
+			{
+				printf("\tInput prompt prefix: ");
+				int length = readInput(buffer);
+				printString(buffer);
+			}
+			else if (strcmp(tuple->arguments[0], "where") == 0)
+			{
+				where(tuple->arguments[1], environmentString);
+			}
+			else
+			{
+				/*  else  program to exec */
+				char *commandStr = which(tuple->arguments[0], environmentString);
+				if (commandStr != NULL)
 				{
-					if (execvp(*(tuple->arguments), tuple->arguments) < 0)
+					/* find it */
+					/* do fork(), execve() and waitpid() */
+					/* else */
+					/* fprintf(stderr, "%s: Command not found.\n", args[0]); */
+
+					pid_t pid;
+					int status;
+
+					if ((pid = fork()) == 0)
 					{
-						printf("error executing exec");
-						exit(EXIT_FAILURE);
+						execve(commandStr, tuple->arguments, envp);
+						perror("exec failed");
+						exit(2);
+					}
+					else
+					{
+						waitpid(pid, &status, 0);
 					}
 				}
 				else
 				{
-					while (wait(&status) != pid);
-					
+					printf("command not found\n");
 				}
-			} else 
-			{
-				printf("command not found\n");
 			}
 		}
 	}
@@ -132,7 +132,7 @@ char *which(char *command, char *path)
 		{
 			char pathOfCommand[strlen(result) + strlen(command)];
 			sprintf(pathOfCommand, "%s/%s", result, command);
-			if (access(pathOfCommand, F_OK) == 0)
+			if (access(pathOfCommand, X_OK) == 0)
 			{
 				char *returnString = calloc(strlen(pathOfCommand) + 1, sizeof(char));
 				strncpy(returnString, pathOfCommand, strlen(pathOfCommand));
@@ -148,6 +148,28 @@ char *which(char *command, char *path)
 char *where(char *command, char *path)
 {
 	/* similarly loop through finding all locations of command */
+	char *delim = ":";
+	char *result = NULL;
+
+	char copyPath[strlen(path)];
+	strcpy(copyPath, path);
+	if (strcmp(command, "") != 0)
+	{
+		result = strtok(copyPath, delim);
+		while (result != NULL)
+		{
+			char pathOfCommand[strlen(result) + strlen(command) + 1];
+			sprintf(pathOfCommand, "%s/%s", result, command);
+
+			if (access(pathOfCommand, F_OK) == 0)
+			{
+				printf("%s\n", pathOfCommand);
+				break;
+			}
+
+			result = strtok(NULL, delim);
+		}
+	}
 	return NULL;
 } /* where() */
 
@@ -184,7 +206,8 @@ tuple_t *stringToArray(char *input)
 		count++;
 	}
 
-	char **argv = calloc((count + 1) , sizeof(*argv));
+	char **argv = malloc((count + 2) * sizeof(*argv));
+	argv[count + 1] = NULL;
 
 	count = 0;
 	strcpy(buff, input);
