@@ -20,14 +20,13 @@ int sh(int argc, char **argv, char **envp)
 {
 	char *prompt = calloc(PROMPTMAX, sizeof(char));
 	char *command, *arg, *commandpath, *p, *pwd, *owd;
-	// char **args = calloc(MAXARGS, sizeof(char *));
 	int uid, i, status, argsct, go = 1;
 	struct passwd *password_entry;
 	char *homedir;
 	// struct pathelement *pathlist;
 
 	uid = getuid();
-	password_entry = getpwuid(uid);   /* get passwd info */
+	password_entry = getpwuid(uid);	/* get passwd info */
 	homedir = password_entry->pw_dir; /* Home directory to start out with*/
 
 	if ((pwd = getcwd(NULL, PATH_MAX + 1)) == NULL)
@@ -63,25 +62,54 @@ int sh(int argc, char **argv, char **envp)
 			// /* check for each built in command and implement */
 			if (strcmp(tuple->arguments[0], "exit") == 0)
 			{
+				free(prompt);
 				free(pwd);
 				free(owd);
+				free(commandline);
+				freeArgs(tuple);
 				exit(0);
 			}
 			else if (strcmp(tuple->arguments[0], "pid") == 0)
 			{
 				printf("%d\n", (int)getpid());
+				freeArgs(tuple);
+				free(commandline);
 			}
 			else if (strcmp(tuple->arguments[0], "prompt") == 0)
 			{
-				printf("\tInput prompt prefix: ");
-				int length = readInput(buffer);
-				if (length >= PROMPTMAX)
+				if (tuple->count == 1)
 				{
-					perror("invalid size");
+					printf("\tInput prompt prefix: ");
+					int length = readInput(buffer);
+					if (length >= PROMPTMAX)
+					{
+						perror("invalid size");
+					}
+					else
+					{
+						strcpy(prompt, buffer);
+					}
+					freeArgs(tuple);
+					free(commandline);
+				}
+				else if (tuple->count == 2)
+				{
+					if (strlen(tuple->arguments[1]) >= PROMPTMAX)
+					{
+						perror("invalid size");
+					}
+					else
+					{
+						strcpy(prompt, tuple->arguments[1]);
+					}
+					freeArgs(tuple);
+					free(commandline);
 				}
 				else
 				{
-					strcpy(prompt, buffer);
+					printf("too many arguments for prompt\n");
+					freeArgs(tuple);
+					free(commandline);
 				}
 			}
 			else if (strcmp(tuple->arguments[0], "where") == 0)
@@ -95,6 +123,8 @@ int sh(int argc, char **argv, char **envp)
 						i++;
 					}
 				}
+				freeArgs(tuple);
+				free(commandline);
 			}
 			else if (strcmp(tuple->arguments[0], "printenv") == 0)
 			{
@@ -103,9 +133,31 @@ int sh(int argc, char **argv, char **envp)
 					char *curEnv = *env;
 					printString(curEnv);
 				}
-				
+				freeArgs(tuple);
+				free(commandline);
 			}
-			
+			else if (strcmp(tuple->arguments[0], "list") == 0)
+			{
+				if (tuple->count == 1)
+				{
+					printf("current directory\n");
+					list(".");
+				}
+				else
+				{
+					int i = 1;
+					while (tuple->arguments[i] != NULL)
+					{
+						printf("%s:\n", tuple->arguments[i]);
+						list(tuple->arguments[i]);
+						printf("\n");
+						i++;
+					}
+				}
+				freeArgs(tuple);
+				free(commandline);
+			}
+
 			else if (strcmp(tuple->arguments[0], "cd") == 0)
 			{
 				if (tuple->count > 2)
@@ -161,6 +213,8 @@ int sh(int argc, char **argv, char **envp)
 						}
 					}
 				}
+				freeArgs(tuple);
+				free(commandline);
 			}
 			else
 			{
@@ -168,11 +222,6 @@ int sh(int argc, char **argv, char **envp)
 				char *commandStr = which(tuple->arguments[0], environmentString);
 				if (commandStr != NULL)
 				{
-					/* find it */
-					/* do fork(), execve() and waitpid() */
-					/* else */
-					/* fprintf(stderr, "%s: Command not found.\n", args[0]); */
-
 					pid_t pid;
 					int status;
 
@@ -191,6 +240,9 @@ int sh(int argc, char **argv, char **envp)
 				{
 					printf("command not found\n");
 				}
+				free(commandStr);
+				free(commandline);
+				freeArgs(tuple);
 			}
 		}
 	}
@@ -270,10 +322,23 @@ char *where(char *command, char *path)
 	return NULL;
 } /* where() */
 
-void list(char *dir)
+void list(char *dirPath)
 {
-	/* see man page for opendir() and readdir() and print out filenames for
-  the directory passed */
+	DIR *d;
+	struct dirent *dir;
+	d = opendir(dirPath);
+	if (d == NULL)
+	{
+		perror("list");
+	}
+	else
+	{
+		while ((dir = readdir(d)) != NULL)
+		{
+			printf("%s\n", dir->d_name);
+		}
+		closedir(d);
+	}
 } /* list() */
 
 char readInput(char *buffer)
@@ -290,6 +355,7 @@ char readInput(char *buffer)
 tuple_t *stringToArray(char *input)
 {
 	tuple_t *tup = malloc(sizeof(tuple_t));
+	printString("tuple created");
 
 	// make a copy of array
 	char buff[BUFFER_SIZE] = "";
@@ -323,4 +389,20 @@ tuple_t *stringToArray(char *input)
 	tup->count = count;
 
 	return tup;
+}
+
+void freeArgs(tuple_t *t)
+{
+	//free args index
+	int i = 0;
+	while (t->arguments[i] != NULL)
+	{
+		free(t->arguments[i]);
+		i++;
+	}
+	// //free args list
+	free(t->arguments);
+	//free tuple
+	free(t);
+	printString("tuple freed");
 }

@@ -15,6 +15,7 @@ void list (char *dir);
 void printenv(char **envp);
 char readInput(char *buffer);
 tuple_t *stringToArray(char *input);
+void freeArgs(tuple_t *t);
 
 #define PROMPTMAX 32
 #define MAXARGS 10

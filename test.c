@@ -91,22 +91,9 @@ char readInput(char *buffer)
 
 int main(int argc, char const *argv[])
 {
-	struct passwd *pw = getpwuid(getuid());
-	// printf("%s\n", pw->pw_dir);
-	char *pwd = getcwd(NULL, PATH_MAX + 1);
-	printf("%s\n", pwd);
-
-	// chdir(pw->pw_dir);
-
-	// char *pwd2 = getcwd(NULL, PATH_MAX + 1);
-	// printf("%s\n\n\n\n", pwd2);
-
-	free(pwd);
-	// free(pwd2);
-
 	DIR *d;
 	struct dirent *dir;
-	d = opendir(".");
+	d = opendir("asdfasdfasdfasdf");
 	if (d)
 	{
 		while ((dir = readdir(d)) != NULL)
@@ -114,7 +101,6 @@ int main(int argc, char const *argv[])
 			printf("%s\n", dir->d_name);
 		}
 		closedir(d);
-		
 	}
 	return 0;
 }
