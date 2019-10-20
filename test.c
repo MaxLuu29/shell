@@ -4,6 +4,8 @@
 #include <unistd.h>
 #include <limits.h>
 #include <dirent.h>
+#include <pwd.h>
+#include <sys/types.h>
 
 #define BUFFSIZE 128
 
@@ -89,12 +91,30 @@ char readInput(char *buffer)
 
 int main(int argc, char const *argv[])
 {
-	char input[128];
-	char *prompt = calloc(32, sizeof(char));
-	prompt = "";
-	readInput(input);
-	strcpy(prompt, input);
+	struct passwd *pw = getpwuid(getuid());
+	// printf("%s\n", pw->pw_dir);
+	char *pwd = getcwd(NULL, PATH_MAX + 1);
+	printf("%s\n", pwd);
 
-	printf("%s\n", prompt);
+	// chdir(pw->pw_dir);
+
+	// char *pwd2 = getcwd(NULL, PATH_MAX + 1);
+	// printf("%s\n\n\n\n", pwd2);
+
+	free(pwd);
+	// free(pwd2);
+
+	DIR *d;
+	struct dirent *dir;
+	d = opendir(".");
+	if (d)
+	{
+		while ((dir = readdir(d)) != NULL)
+		{
+			printf("%s\n", dir->d_name);
+		}
+		closedir(d);
+		
+	}
 	return 0;
 }

@@ -82,12 +82,10 @@ int sh(int argc, char **argv, char **envp)
 				{
 					strcpy(prompt, buffer);
 				}
-				
-				
 			}
 			else if (strcmp(tuple->arguments[0], "where") == 0)
 			{
-				if(tuple->arguments[1] != NULL)
+				if (tuple->arguments[1] != NULL)
 				{
 					int i = 1;
 					while (tuple->arguments[i] != NULL)
@@ -95,7 +93,6 @@ int sh(int argc, char **argv, char **envp)
 						where(tuple->arguments[i], environmentString);
 						i++;
 					}
-					
 				}
 			}
 			else
@@ -137,6 +134,23 @@ char *which(char *command, char *path)
 {
 	/* loop through pathlist until finding command and return it.  Return
    NULL when not found. */
+
+	//check for absolute path
+	if (*command == '/')
+	{
+		if (access(command, X_OK) == 0)
+		{
+			char *returnString = calloc(strlen(command) + 1, sizeof(char));
+			strncpy(returnString, command, strlen(command));
+			return returnString;
+		}
+		else
+		{
+			return NULL;
+		}
+		
+	}
+
 	char *delim = ":";
 	char *result = NULL;
 
