@@ -28,8 +28,7 @@ int sh(int argc, char **argv, char **envp)
 
 	uid = getuid();
 	password_entry = getpwuid(uid);   /* get passwd info */
-	homedir = password_entry->pw_dir; /* Home directory to start
-						  out with*/
+	homedir = password_entry->pw_dir; /* Home directory to start out with*/
 
 	if ((pwd = getcwd(NULL, PATH_MAX + 1)) == NULL)
 	{
@@ -64,6 +63,8 @@ int sh(int argc, char **argv, char **envp)
 			// /* check for each built in command and implement */
 			if (strcmp(tuple->arguments[0], "exit") == 0)
 			{
+				free(pwd);
+				free(owd);
 				exit(0);
 			}
 			else if (strcmp(tuple->arguments[0], "pid") == 0)
@@ -92,6 +93,72 @@ int sh(int argc, char **argv, char **envp)
 					{
 						where(tuple->arguments[i], environmentString);
 						i++;
+					}
+				}
+			}
+			else if (strcmp(tuple->arguments[0], "printenv") == 0)
+			{
+				for (char **env = envp; *env != 0; env++)
+				{
+					char *curEnv = *env;
+					printString(curEnv);
+				}
+				
+			}
+			
+			else if (strcmp(tuple->arguments[0], "cd") == 0)
+			{
+				if (tuple->count > 2)
+				{
+					perror("cd: too many arguments");
+				}
+				else
+				{
+					if (tuple->count == 1)
+					{
+						chdir(homedir);
+						free(pwd);
+						if ((pwd = getcwd(NULL, PATH_MAX + 1)) == NULL)
+						{
+							perror("getcwd");
+							exit(2);
+						}
+					}
+					else
+					{
+						if (strcmp(tuple->arguments[1], "~") == 0)
+						{
+							chdir(homedir);
+							free(pwd);
+							if ((pwd = getcwd(NULL, PATH_MAX + 1)) == NULL)
+							{
+								perror("getcwd");
+								exit(2);
+							}
+						}
+						else if (strcmp(tuple->arguments[1], "-") == 0)
+						{
+							chdir(owd);
+							free(pwd);
+							if ((pwd = getcwd(NULL, PATH_MAX + 1)) == NULL)
+							{
+								perror("getcwd");
+								exit(2);
+							}
+						}
+						else if (chdir(tuple->arguments[1]) != 0)
+						{
+							perror("chdir failed");
+						}
+						else
+						{
+							free(pwd);
+							if ((pwd = getcwd(NULL, PATH_MAX + 1)) == NULL)
+							{
+								perror("getcwd");
+								exit(2);
+							}
+						}
 					}
 				}
 			}
@@ -148,7 +215,6 @@ char *which(char *command, char *path)
 		{
 			return NULL;
 		}
-		
 	}
 
 	char *delim = ":";
