@@ -26,7 +26,7 @@ int sh(int argc, char **argv, char **envp)
 	// struct pathelement *pathlist;
 
 	uid = getuid();
-	password_entry = getpwuid(uid);	/* get passwd info */
+	password_entry = getpwuid(uid);   /* get passwd info */
 	homedir = password_entry->pw_dir; /* Home directory to start out with*/
 
 	if ((pwd = getcwd(NULL, PATH_MAX + 1)) == NULL)
@@ -138,7 +138,7 @@ int sh(int argc, char **argv, char **envp)
 				}
 				else if (tuple->count == 2)
 				{
-					char* environmentFromGetEnv = getenv(tuple->arguments[1]);
+					char *environmentFromGetEnv = getenv(tuple->arguments[1]);
 					if (environmentFromGetEnv != NULL)
 					{
 						printString(environmentFromGetEnv);
@@ -147,7 +147,7 @@ int sh(int argc, char **argv, char **envp)
 					{
 						perror("path does not exist");
 					}
-				} 
+				}
 				else
 				{
 					perror("too many arguments");
@@ -155,6 +155,48 @@ int sh(int argc, char **argv, char **envp)
 				freeArgs(tuple);
 				free(commandline);
 			}
+			else if (strcmp(tuple->arguments[0], "setenv") == 0)
+			{
+			}
+			else if (strcmp(tuple->arguments[0], "kill") == 0)
+			{
+				if (tuple->count == 1 || tuple->count > 3)
+				{
+					perror("invalid number of arguments");
+					free(commandline);
+					freeArgs(tuple);
+				}
+				else if (tuple->count == 2)
+				{
+					int pid1 = atoi(tuple->arguments[1]);
+					free(prompt);
+					free(pwd);
+					free(owd);
+					free(commandline);
+					freeArgs(tuple);
+					int killStatus;
+					if ((killStatus = kill(pid1, SIGTERM)) != 0)
+					{
+						perror("2");
+					}
+				}
+				else if (tuple->count == 3)
+				{
+					int pid1 = atoi(tuple->arguments[1]);
+					int signal = atoi(tuple->arguments[2]);
+					// free(prompt);
+					// free(pwd);
+					// free(owd);
+					// free(commandline);
+					// freeArgs(tuple);
+					int killStatus;
+					if ((killStatus = kill(pid1, signal)) != 0)
+					{
+						perror("3");
+					}
+				}
+			}
+
 			else if (strcmp(tuple->arguments[0], "list") == 0)
 			{
 				if (tuple->count == 1)
@@ -367,6 +409,10 @@ char readInput(char *buffer)
 	{
 		length = strlen(buffer);
 		buffer[length - 1] = '\0';
+	}
+	if (feof(stdin)) 
+	{
+
 	}
 	return length;
 }

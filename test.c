@@ -91,16 +91,17 @@ char readInput(char *buffer)
 
 int main(int argc, char const *argv[])
 {
-	DIR *d;
-	struct dirent *dir;
-	d = opendir("asdfasdfasdfasdf");
-	if (d)
-	{
-		while ((dir = readdir(d)) != NULL)
-		{
-			printf("%s\n", dir->d_name);
-		}
-		closedir(d);
-	}
+	struct passwd *pw = getpwuid(getuid());
+	const char *homedir = pw->pw_dir;
+	printf("%s\n", homedir);
+
+	setenv("HOME", "/Users/max/Downloads/myshell", 1);
+	printf("%s\n", getenv("HOME"));
+
+	struct passwd *pw2 = getpwuid(getuid());
+	const char *homedir2 = pw2->pw_dir;
+
+	printf("%s\n", homedir2);
+	
 	return 0;
 }
