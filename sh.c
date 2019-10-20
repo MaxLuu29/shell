@@ -128,10 +128,29 @@ int sh(int argc, char **argv, char **envp)
 			}
 			else if (strcmp(tuple->arguments[0], "printenv") == 0)
 			{
-				for (char **env = envp; *env != 0; env++)
+				if (tuple->count == 1)
 				{
-					char *curEnv = *env;
-					printString(curEnv);
+					for (char **env = envp; *env != 0; env++)
+					{
+						char *curEnv = *env;
+						printString(curEnv);
+					}
+				}
+				else if (tuple->count == 2)
+				{
+					char* environmentFromGetEnv = getenv(tuple->arguments[1]);
+					if (environmentFromGetEnv != NULL)
+					{
+						printString(environmentFromGetEnv);
+					}
+					else
+					{
+						perror("path does not exist");
+					}
+				} 
+				else
+				{
+					perror("too many arguments");
 				}
 				freeArgs(tuple);
 				free(commandline);
