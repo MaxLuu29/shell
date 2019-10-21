@@ -493,7 +493,7 @@ char readInput(char *buffer)
 tuple_t *stringToArray(char *input)
 {
 	tuple_t *tup = malloc(sizeof(tuple_t));
-	printString("tuple created");
+	//printString("tuple created");
 
 	// make a copy of array
 	char buff[BUFFER_SIZE] = "";
@@ -542,5 +542,5 @@ void freeArgs(tuple_t *t)
 	free(t->arguments);
 	//free tuple
 	free(t);
-	printString("tuple freed");
+	//printString("tuple freed");
 }
