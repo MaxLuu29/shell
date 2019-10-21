@@ -10,7 +10,7 @@
 #include <sys/wait.h>
 #include <signal.h>
 #include "sh.h"
-
+#include <wordexp.h>
 void printString(char *s)
 {
 	printf("%s\n", s);
@@ -18,7 +18,6 @@ void printString(char *s)
 
 int sh(int argc, char **argv, char **envp)
 {
-	int wildcard = 0;
 
 	char *prompt = calloc(PROMPTMAX, sizeof(char));
 	char *command, *arg, *commandpath, *p, *pwd, *owd;
@@ -283,16 +282,80 @@ int sh(int argc, char **argv, char **envp)
 			{
 				/*  else  program to exec */
 				char *commandStr = which(tuple->arguments[0], environmentString);
+				int wildCard = 0;
+				char **expCmd;
 				if (commandStr != NULL)
 				{
+					
+					wordexp_t p;
+					char **w;
+					int wordExpIndex;
+					for (size_t i = 0; tuple->arguments[i] != NULL; i++)
+					{
+						int index = strcspn(tuple->arguments[i], "*?");
+						int k, j;
+						if (index < strlen(tuple->arguments[i]))
+						{
+							wildCard = 1;
+							// printf("%s\n---------\n", tuple->arguments[i]);
+
+							wordexp(tuple->arguments[i], &p, 0);
+							w = p.we_wordv;
+							int count = i + p.we_wordc + 1;
+							// printf("%d\n", count);
+
+							expCmd = malloc(count * sizeof(*expCmd));
+							expCmd[count - 1] = NULL;
+
+							// for (size_t c = 0; c < p.we_wordc; c++)
+							// {
+							// 	printf("%s\n", w[c]);
+							// }
+							// printf("---------------------------------\n");
+
+							for (j = 0; j < i; j++)
+							{
+								// printf("%s\n", tuple->arguments[j]);
+								expCmd[j] = (char *)malloc((strlen(tuple->arguments[j]) + 1) * sizeof(char));
+								strcpy(expCmd[j], tuple->arguments[j]);
+							}
+							// printf("---------------------------------\n");
+
+							for (k = 0; k < p.we_wordc; k++)
+							{
+								// printf("%s\n", w[k]);
+								expCmd[k + i] = (char *)malloc((strlen(w[k]) + 1) * sizeof(char));
+								strcpy(expCmd[k + i], w[k]);
+							}
+							// printf("---------------------------------\n");
+
+							// for (size_t x = 0; expCmd[x] != NULL; x++)
+							// {
+							// 	printf("%s\n", expCmd[x]);
+							// }
+							// printf("---------------------------------\n");
+							wordfree(&p);
+						}
+					}
+
 					pid_t pid;
 					int status;
 
 					if ((pid = fork()) == 0)
 					{
-						execve(commandStr, tuple->arguments, envp);
-						perror("exec failed");
-						exit(2);
+						if (wildCard == 0)
+						{
+							execve(commandStr, tuple->arguments, envp);
+							perror("exec failed");
+							exit(2);
+						}
+						if (wildCard == 1)
+						{
+							printf("reached here");
+							execve(commandStr, expCmd, envp);
+							perror("exec failed");
+							exit(2);
+						}
 					}
 					else
 					{
@@ -305,6 +368,15 @@ int sh(int argc, char **argv, char **envp)
 				}
 				free(commandStr);
 				free(commandline);
+				if (wildCard == 1)
+				{
+					for (size_t i = 0; expCmd[i] != NULL; i++)
+					{
+						free(expCmd[i]);
+					}
+					free(expCmd);
+				}
+				
 				freeArgs(tuple);
 			}
 		}
@@ -412,9 +484,8 @@ char readInput(char *buffer)
 		length = strlen(buffer);
 		buffer[length - 1] = '\0';
 	}
-	if (feof(stdin)) 
+	if (feof(stdin))
 	{
-
 	}
 	return length;
 }

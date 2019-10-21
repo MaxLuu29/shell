@@ -104,12 +104,11 @@ int main(int argc, char const *argv[], char **envp)
 
 	// printf("%s\n", homedir2);
 
-	char *cmd[5];
+	char *cmd[4];
 	cmd[0] = "ls";
 	cmd[1] = "-a";
 	cmd[2] = "-l";
-	cmd[3] = "*.c";
-	cmd[4] = NULL;
+	cmd[3] = NULL;
 	// char *cmd[4];
 	// cmd[0] = "ls";
 	// cmd[1] = "-al";
@@ -135,11 +134,11 @@ int main(int argc, char const *argv[], char **envp)
 			char **expCmd = malloc(count * sizeof(*expCmd));
 			expCmd[count-1] = NULL;
 
-			// for (size_t c = 0; c < p.we_wordc; c++)
-			// {
-			// 	printf("%s\n", w[c]);
-			// }
-			// printf("---------------------------------\n");
+			for (size_t c = 0; c < p.we_wordc; c++)
+			{
+				printf("%s\n", w[c]);
+			}
+			printf("---------------------------------\n");
 
 			for (j = 0; j < i; j++)
 			{
@@ -164,6 +163,7 @@ int main(int argc, char const *argv[], char **envp)
 			}
 			printf("---------------------------------\n");
 
+			
 			execve("/bin/ls", expCmd, envp);
 			wordfree(&p);
 		}
