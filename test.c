@@ -104,10 +104,17 @@ int main(int argc, char const *argv[], char **envp)
 
 	// printf("%s\n", homedir2);
 
-	char *cmd[3];
+	char *cmd[5];
 	cmd[0] = "ls";
-	cmd[1] = "*.c";
-	cmd[2] = NULL;
+	cmd[1] = "-a";
+	cmd[2] = "-l";
+	cmd[3] = "*.c";
+	cmd[4] = NULL;
+	// char *cmd[4];
+	// cmd[0] = "ls";
+	// cmd[1] = "-al";
+	// cmd[2] = "*.c";
+	// cmd[3] = NULL;
 	wordexp_t p;
 	char **w;
 	int wordExpIndex;
@@ -115,7 +122,8 @@ int main(int argc, char const *argv[], char **envp)
 	
 	for (size_t i = 1; cmd[i] != NULL; i++)
 	{
-		int index = strcspn(cmd[i], ".?");
+		int index = strcspn(cmd[i], "*?");
+		int k, j;
 		if (index < strlen(cmd[i]))
 		{
 			printf("%s\n---------\n", cmd[i]);
@@ -127,26 +135,36 @@ int main(int argc, char const *argv[], char **envp)
 			char **expCmd = malloc(count * sizeof(*expCmd));
 			expCmd[count-1] = NULL;
 
-			for (size_t j = 0; j < i; j++)
+			// for (size_t c = 0; c < p.we_wordc; c++)
+			// {
+			// 	printf("%s\n", w[c]);
+			// }
+			// printf("---------------------------------\n");
+
+			for (j = 0; j < i; j++)
 			{
-				// printf("%s\n", cmd[j]);
+				printf("%s\n", cmd[j]);
 				expCmd[j] = (char *)malloc((strlen(cmd[j]) + 1) * sizeof(char));
 				strcpy(expCmd[j], cmd[j]);
-			}
+			}	
+			printf("---------------------------------\n");
 
-			for (size_t k = i; k < count - 2; k++)
+			for (k = 0; k < p.we_wordc; k++)
 			{
-				// printf("%s\n", w[k]);
-				expCmd[k] = (char *)malloc((strlen(w[k]) + 1) * sizeof(char));
-				strcpy(expCmd[k], w[k]);
+				printf("%s\n", w[k]);
+				expCmd[k+i] = (char *)malloc((strlen(w[k]) + 1) * sizeof(char));
+				strcpy(expCmd[k+i], w[k]);
 			}
+			printf("---------------------------------\n");
 
-			// for (size_t x = 0; expCmd[x] != NULL; x++)
-			// {
-			// 	printf("%s\n", expCmd[x]);
-			// }
 
-			execve("/usr/bin/file", expCmd, envp);
+			for (size_t x = 0; expCmd[x] != NULL; x++)
+			{
+				printf("%s\n", expCmd[x]);
+			}
+			printf("---------------------------------\n");
+
+			execve("/bin/ls", expCmd, envp);
 			wordfree(&p);
 		}
 	}
