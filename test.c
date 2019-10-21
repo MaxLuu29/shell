@@ -7,6 +7,7 @@
 #include <pwd.h>
 #include <sys/types.h>
 #include <wordexp.h>
+#include <glob.h>
 
 #define BUFFSIZE 128
 
@@ -90,6 +91,33 @@ char readInput(char *buffer)
 	return length;
 }
 
+char *glob_pattern(char *wildcard)
+{
+	char *gfilename;
+	size_t cnt, length;
+	glob_t glob_results;
+	char **p;
+
+	glob(wildcard, GLOB_NOCHECK, 0, &glob_results);
+
+	/* How much space do we need?  */
+	length = 0;
+	for (p = glob_results.gl_pathv, cnt = glob_results.gl_pathc; cnt; p++, cnt--)
+		length += strlen(*p) + 1;
+
+	/* Allocate the space and generate the list.  */
+	gfilename = malloc(length);
+	for (p = glob_results.gl_pathv, cnt = glob_results.gl_pathc; cnt; p++, cnt--)
+	{
+		strcat(gfilename, *p);
+		if (cnt > 1)
+			strcat(gfilename, " ");
+	}
+
+	globfree(&glob_results);
+	return gfilename;
+}
+
 int main(int argc, char const *argv[], char **envp)
 {
 	// struct passwd *pw = getpwuid(getuid());
@@ -114,70 +142,69 @@ int main(int argc, char const *argv[], char **envp)
 	// cmd[1] = "-al";
 	// cmd[2] = "*.c";
 	// cmd[3] = NULL;
-	wordexp_t p;
-	char **w;
-	int wordExpIndex;
+	// wordexp_t p;
+	// char **w;
+	// int wordExpIndex;
 
-	
-	for (size_t i = 1; cmd[i] != NULL; i++)
-	{
-		int index = strcspn(cmd[i], "*?");
-		int k, j;
-		if (index < strlen(cmd[i]))
-		{
-			printf("%s\n---------\n", cmd[i]);
+	// for (size_t i = 1; cmd[i] != NULL; i++)
+	// {
+	// 	int index = strcspn(cmd[i], "*?");
+	// 	int k, j;
+	// 	if (index < strlen(cmd[i]))
+	// 	{
+	// 		printf("%s\n---------\n", cmd[i]);
 
-			wordexp(cmd[i], &p, 0);
-			w = p.we_wordv;
-			int count = i + p.we_wordc + 1;
-			printf("%d\n", count);
-			char **expCmd = malloc(count * sizeof(*expCmd));
-			expCmd[count-1] = NULL;
+	// 		wordexp(cmd[i], &p, 0);
+	// 		w = p.we_wordv;
+	// 		int count = i + p.we_wordc + 1;
+	// 		printf("%d\n", count);
+	// 		char **expCmd = malloc(count * sizeof(*expCmd));
+	// 		expCmd[count-1] = NULL;
 
-			for (size_t c = 0; c < p.we_wordc; c++)
-			{
-				printf("%s\n", w[c]);
-			}
-			printf("---------------------------------\n");
+	// 		for (size_t c = 0; c < p.we_wordc; c++)
+	// 		{
+	// 			printf("%s\n", w[c]);
+	// 		}
+	// 		printf("---------------------------------\n");
 
-			for (j = 0; j < i; j++)
-			{
-				printf("%s\n", cmd[j]);
-				expCmd[j] = (char *)malloc((strlen(cmd[j]) + 1) * sizeof(char));
-				strcpy(expCmd[j], cmd[j]);
-			}	
-			printf("---------------------------------\n");
+	// 		for (j = 0; j < i; j++)
+	// 		{
+	// 			printf("%s\n", cmd[j]);
+	// 			expCmd[j] = (char *)malloc((strlen(cmd[j]) + 1) * sizeof(char));
+	// 			strcpy(expCmd[j], cmd[j]);
+	// 		}
+	// 		printf("---------------------------------\n");
 
-			for (k = 0; k < p.we_wordc; k++)
-			{
-				printf("%s\n", w[k]);
-				expCmd[k+i] = (char *)malloc((strlen(w[k]) + 1) * sizeof(char));
-				strcpy(expCmd[k+i], w[k]);
-			}
-			printf("---------------------------------\n");
+	// 		for (k = 0; k < p.we_wordc; k++)
+	// 		{
+	// 			printf("%s\n", w[k]);
+	// 			expCmd[k+i] = (char *)malloc((strlen(w[k]) + 1) * sizeof(char));
+	// 			strcpy(expCmd[k+i], w[k]);
+	// 		}
+	// 		printf("---------------------------------\n");
 
+	// 		for (size_t x = 0; expCmd[x] != NULL; x++)
+	// 		{
+	// 			printf("%s\n", expCmd[x]);
+	// 		}
+	// 		printf("---------------------------------\n");
 
-			for (size_t x = 0; expCmd[x] != NULL; x++)
-			{
-				printf("%s\n", expCmd[x]);
-			}
-			printf("---------------------------------\n");
-
-			
-			execve("/bin/ls", expCmd, envp);
-			wordfree(&p);
-		}
-	}
+	// 		execve("/bin/ls", expCmd, envp);
+	// 		wordfree(&p);
+	// 	}
+	// }
 
 	// wordexp_t p;
 	// char **w;
 	// int i;
-	// char c[] = "*.c";
+	// char c[] = "finger *.c";
 	// wordexp(c, &p, 0);
 	// w = p.we_wordv;
 	// for (i = 0; i < p.we_wordc; i++)
 	// 	printf("%s\n", w[i]);
 	// wordfree(&p);
+
+	printf("%d", atoi("-9"));
 
 	return 0;
 }

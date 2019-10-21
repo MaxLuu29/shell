@@ -185,16 +185,12 @@ int sh(int argc, char **argv, char **envp)
 				{
 					int pid1 = atoi(tuple->arguments[1]);
 					int signal = atoi(tuple->arguments[2]);
-					// free(prompt);
-					// free(pwd);
-					// free(owd);
-					// free(commandline);
-					// freeArgs(tuple);
 					int killStatus;
+					if (signal < 0)
+						signal *= -1;
+					
 					if ((killStatus = kill(pid1, signal)) != 0)
-					{
 						perror("3");
-					}
 				}
 			}
 
@@ -390,7 +386,7 @@ char *which(char *command, char *path)
    NULL when not found. */
 
 	//check for absolute path
-	if (*command == '/')
+	if (*command == '/' || *command == '.')
 	{
 		if (access(command, X_OK) == 0)
 		{
