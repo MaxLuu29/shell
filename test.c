@@ -6,6 +6,7 @@
 #include <dirent.h>
 #include <pwd.h>
 #include <sys/types.h>
+#include <wordexp.h>
 
 #define BUFFSIZE 128
 
@@ -89,19 +90,76 @@ char readInput(char *buffer)
 	return length;
 }
 
-int main(int argc, char const *argv[])
+int main(int argc, char const *argv[], char **envp)
 {
-	struct passwd *pw = getpwuid(getuid());
-	const char *homedir = pw->pw_dir;
-	printf("%s\n", homedir);
+	// struct passwd *pw = getpwuid(getuid());
+	// const char *homedir = pw->pw_dir;
+	// printf("%s\n", homedir);
 
-	setenv("HOME", "/Users/max/Downloads/myshell", 1);
-	printf("%s\n", getenv("HOME"));
+	// setenv("HOME", "/Users/max/Downloads/myshell", 1);
+	// printf("%s\n", getenv("HOME"));
 
-	struct passwd *pw2 = getpwuid(getuid());
-	const char *homedir2 = pw2->pw_dir;
+	// struct passwd *pw2 = getpwuid(getuid());
+	// const char *homedir2 = pw2->pw_dir;
 
-	printf("%s\n", homedir2);
+	// printf("%s\n", homedir2);
+
+	char *cmd[3];
+	cmd[0] = "ls";
+	cmd[1] = "*.c";
+	cmd[2] = NULL;
+	wordexp_t p;
+	char **w;
+	int wordExpIndex;
+
 	
+	for (size_t i = 1; cmd[i] != NULL; i++)
+	{
+		int index = strcspn(cmd[i], ".?");
+		if (index < strlen(cmd[i]))
+		{
+			printf("%s\n---------\n", cmd[i]);
+
+			wordexp(cmd[i], &p, 0);
+			w = p.we_wordv;
+			int count = i + p.we_wordc + 1;
+			printf("%d\n", count);
+			char **expCmd = malloc(count * sizeof(*expCmd));
+			expCmd[count-1] = NULL;
+
+			for (size_t j = 0; j < i; j++)
+			{
+				// printf("%s\n", cmd[j]);
+				expCmd[j] = (char *)malloc((strlen(cmd[j]) + 1) * sizeof(char));
+				strcpy(expCmd[j], cmd[j]);
+			}
+
+			for (size_t k = i; k < count - 2; k++)
+			{
+				// printf("%s\n", w[k]);
+				expCmd[k] = (char *)malloc((strlen(w[k]) + 1) * sizeof(char));
+				strcpy(expCmd[k], w[k]);
+			}
+
+			// for (size_t x = 0; expCmd[x] != NULL; x++)
+			// {
+			// 	printf("%s\n", expCmd[x]);
+			// }
+
+			execve("/usr/bin/file", expCmd, envp);
+			wordfree(&p);
+		}
+	}
+
+	// wordexp_t p;
+	// char **w;
+	// int i;
+	// char c[] = "*.c";
+	// wordexp(c, &p, 0);
+	// w = p.we_wordv;
+	// for (i = 0; i < p.we_wordc; i++)
+	// 	printf("%s\n", w[i]);
+	// wordfree(&p);
+
 	return 0;
 }

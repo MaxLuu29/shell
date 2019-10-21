@@ -18,6 +18,8 @@ void printString(char *s)
 
 int sh(int argc, char **argv, char **envp)
 {
+	int wildcard = 0;
+
 	char *prompt = calloc(PROMPTMAX, sizeof(char));
 	char *command, *arg, *commandpath, *p, *pwd, *owd;
 	int uid, i, status, argsct, go = 1;

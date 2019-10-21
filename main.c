@@ -7,14 +7,13 @@ void sig_handler(int signal);
 int main(int argc, char **argv, char **envp)
 {
   /* put signal set up stuff here */
-  signal(SIGINT, sig_handler);
-  signal(EOF, sig_handler);
-  signal(SIGTSTP, sig_handler);
+  signal(SIGINT, SIG_IGN);
+  signal(SIGTSTP, SIG_IGN);
   return sh(argc, argv, envp);
 }
 
 void sig_handler(int signal)
 {
   /* define your signal handler */
-  printf("caught signal %d\n", signal);
+  return;
 }
