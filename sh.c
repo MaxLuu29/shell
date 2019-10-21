@@ -183,12 +183,20 @@ int sh(int argc, char **argv, char **envp)
 				}
 				else if (tuple->count == 3)
 				{
-					int pid1 = atoi(tuple->arguments[1]);
-					int signal = atoi(tuple->arguments[2]);
+					int pid1 = atoi(tuple->arguments[2]);
+					int signal = atoi(tuple->arguments[1]);
 					int killStatus;
-					if (signal < 0)
-						signal *= -1;
-					
+
+               if (signal < 0)
+               {
+                  signal *= -1;
+                  free(prompt);
+                  free(pwd);
+                  free(owd);
+               }
+
+               free(commandline);
+               freeArgs(tuple);	
 					if ((killStatus = kill(pid1, signal)) != 0)
 						perror("3");
 				}
