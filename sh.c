@@ -444,6 +444,8 @@ int sh(int argc, char **argv, char **envp)
 						{
 							execve(commandStr, tuple->arguments, envp);
 							perror("exec failed");
+							free(commandline);
+							free(tuple);
 							exit(2);
 						}
 						if (wildCard == 1)
@@ -451,6 +453,8 @@ int sh(int argc, char **argv, char **envp)
 							printf("reached here");
 							execve(commandStr, expCmd, envp);
 							perror("exec failed");
+							free(commandline);
+							free(tuple);
 							exit(2);
 						}
 					}
