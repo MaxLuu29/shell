@@ -353,7 +353,7 @@ int sh(int argc, char **argv, char **envp)
 								exit(2);
 							}
 						}
-						else if (*(tuple->arguments[1]) == '/')
+						else if (*(tuple->arguments[1]) == '/' && strlen(tuple->arguments[1]) > 1)
 						{
 							char strippedString[strlen(tuple->arguments[1])];
 							strncpy(strippedString, tuple->arguments[1] + 1, strlen(tuple->arguments[1]));
