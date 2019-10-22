@@ -358,7 +358,7 @@ int sh(int argc, char **argv, char **envp)
 						if (*(tuple->arguments[1]) == '/')
 						{
 							char strippedString[strlen(tuple->arguments[1])];
-							strncpy(strippedString, tuple->arguments[1] + 1, strlen(tuple->arguments[1]) - 1);
+							strncpy(strippedString, tuple->arguments[1] + 1, strlen(tuple->arguments[1]));
 
 							if (chdir(strippedString) != 0)
 							{
