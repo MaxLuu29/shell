@@ -343,8 +343,7 @@ int sh(int argc, char **argv, char **envp)
 								exit(2);
 							}
 						}
-
-						if (strcmp(tuple->arguments[1], "-") == 0)
+						else if (strcmp(tuple->arguments[1], "-") == 0)
 						{
 							chdir(owd);
 							free(pwd);
@@ -354,8 +353,7 @@ int sh(int argc, char **argv, char **envp)
 								exit(2);
 							}
 						}
-
-						if (*(tuple->arguments[1]) == '/')
+						else if (*(tuple->arguments[1]) == '/')
 						{
 							char strippedString[strlen(tuple->arguments[1])];
 							strncpy(strippedString, tuple->arguments[1] + 1, strlen(tuple->arguments[1]));
