@@ -9,8 +9,10 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <signal.h>
-#include "sh.h"
 #include <wordexp.h>
+#include <errno.h>
+#include "sh.h"
+
 void printString(char *s)
 {
 	printf("%s\n", s);
@@ -158,6 +160,52 @@ int sh(int argc, char **argv, char **envp)
 			}
 			else if (strcmp(tuple->arguments[0], "setenv") == 0)
 			{
+				if (tuple->count == 1)
+				{
+					for (char **env = envp; *env != 0; env++)
+						printString(*env);
+				}
+				else if (tuple->count == 2)
+				{
+					if (strcmp(tuple->arguments[1], "HOME") == 0)
+					{
+						setenv("HOME", "", 1);
+						strcpy(homedir, "");
+					}
+					else
+					{
+						if ((setenv(tuple->arguments[1], "", 1)) != 0)
+							perror("");
+					}
+				}
+				else if (tuple->count == 3)
+				{
+					if (strcmp(tuple->arguments[1], "HOME") == 0)
+					{
+						DIR *d = opendir(tuple->arguments[2]);
+						if (d)
+						{
+							closedir(d);
+							setenv("HOME", tuple->arguments[2], 1);
+							strcpy(homedir, tuple->arguments[2]);
+						}
+						else if (ENOENT == errno)
+						{
+							perror("directory does not exist");
+						}
+						else
+						{
+							perror("directory failed for some reason");
+						}
+					}
+					else
+					{
+						if ((setenv(tuple->arguments[1], tuple->arguments[2], 1)) != 0)
+							perror("");
+					}
+				}
+				freeArgs(tuple);
+				free(commandline);
 			}
 			else if (strcmp(tuple->arguments[0], "kill") == 0)
 			{
@@ -187,16 +235,16 @@ int sh(int argc, char **argv, char **envp)
 					int signal = atoi(tuple->arguments[1]);
 					int killStatus;
 
-               if (signal < 0)
-               {
-                  signal *= -1;
-                  free(prompt);
-                  free(pwd);
-                  free(owd);
-               }
+					if (signal < 0)
+					{
+						signal *= -1;
+						free(prompt);
+						free(pwd);
+						free(owd);
+					}
 
-               free(commandline);
-               freeArgs(tuple);	
+					free(commandline);
+					freeArgs(tuple);
 					if ((killStatus = kill(pid1, signal)) != 0)
 						perror("3");
 				}
@@ -290,7 +338,7 @@ int sh(int argc, char **argv, char **envp)
 				char **expCmd;
 				if (commandStr != NULL)
 				{
-					
+
 					wordexp_t p;
 					char **w;
 					int wordExpIndex;
@@ -380,7 +428,7 @@ int sh(int argc, char **argv, char **envp)
 					}
 					free(expCmd);
 				}
-				
+
 				freeArgs(tuple);
 			}
 		}
