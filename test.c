@@ -204,7 +204,5 @@ int main(int argc, char const *argv[], char **envp)
 	// 	printf("%s\n", w[i]);
 	// wordfree(&p);
 
-	printf("%d", atoi("-9"));
-
 	return 0;
 }

@@ -96,7 +96,7 @@ int sh(int argc, char **argv, char **envp)
 					int length = readInput(buffer);
 					if (length >= PROMPTMAX)
 					{
-						perror("invalid size");
+						fprintf(stderr, "invalid prompt size\n");
 					}
 					else
 					{
@@ -109,7 +109,7 @@ int sh(int argc, char **argv, char **envp)
 				{
 					if (strlen(tuple->arguments[1]) >= PROMPTMAX)
 					{
-						perror("invalid size");
+						fprintf(stderr, "invalid prompt size\n");
 					}
 					else
 					{
