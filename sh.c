@@ -18,6 +18,18 @@ void printString(char *s)
 	printf("%s\n", s);
 }
 
+void printExecCommand(int isBuiltin, char *command)
+{
+	if (isBuiltin == 1)
+	{
+		printf("Executing built-in [%s]\n", command);
+	}
+	else
+	{
+		printf("Executing [%s]\n", command);
+	}
+}
+
 int sh(int argc, char **argv, char **envp)
 {
 
@@ -26,7 +38,6 @@ int sh(int argc, char **argv, char **envp)
 	int uid, i, status, argsct, go = 1;
 	struct passwd *password_entry;
 	char *homedir;
-	// struct pathelement *pathlist;
 
 	uid = getuid();
 	password_entry = getpwuid(uid);   /* get passwd info */
@@ -41,12 +52,8 @@ int sh(int argc, char **argv, char **envp)
 	owd = calloc(strlen(pwd) + 1, sizeof(char));
 	memcpy(owd, pwd, strlen(pwd));
 
-	/* Put PATH into a linked list */
-	// pathlist = get_path();
-
 	char buffer[BUFFER_SIZE];
 	int len;
-	// char *path = getevn("PATH");
 	char *environmentString = getenv("PATH");
 
 	while (go)
@@ -65,6 +72,7 @@ int sh(int argc, char **argv, char **envp)
 			// /* check for each built in command and implement */
 			if (strcmp(tuple->arguments[0], "exit") == 0)
 			{
+				printExecCommand(1, "exit");
 				free(prompt);
 				free(pwd);
 				free(owd);
@@ -74,12 +82,14 @@ int sh(int argc, char **argv, char **envp)
 			}
 			else if (strcmp(tuple->arguments[0], "pid") == 0)
 			{
+				printExecCommand(1, "pid");
 				printf("%d\n", (int)getpid());
 				freeArgs(tuple);
 				free(commandline);
 			}
 			else if (strcmp(tuple->arguments[0], "prompt") == 0)
 			{
+				printExecCommand(1, "prompt");
 				if (tuple->count == 1)
 				{
 					printf("\tInput prompt prefix: ");
@@ -115,8 +125,35 @@ int sh(int argc, char **argv, char **envp)
 					free(commandline);
 				}
 			}
+			else if (strcmp(tuple->arguments[0], "which") == 0)
+			{
+				printExecCommand(1, "which");
+				if (tuple->arguments[1] != NULL)
+				{
+					int i = 1;
+					while (tuple->arguments[i] != NULL)
+					{
+						int exist = 0;
+						char *whichReturn = which(tuple->arguments[i], environmentString);
+						if (whichReturn != NULL)
+						{
+							printString(whichReturn);
+							free(whichReturn);
+							exist = 1;
+						}
+						if (exist == 0)
+						{
+							printf("%s not found\n", tuple->arguments[i]);
+						}
+						i++;
+					}
+				}
+				freeArgs(tuple);
+				free(commandline);
+			}
 			else if (strcmp(tuple->arguments[0], "where") == 0)
 			{
+				printExecCommand(1, "where");
 				if (tuple->arguments[1] != NULL)
 				{
 					int i = 1;
@@ -131,6 +168,7 @@ int sh(int argc, char **argv, char **envp)
 			}
 			else if (strcmp(tuple->arguments[0], "printenv") == 0)
 			{
+				printExecCommand(1, "printenv");
 				if (tuple->count == 1)
 				{
 					for (char **env = envp; *env != 0; env++)
@@ -160,9 +198,10 @@ int sh(int argc, char **argv, char **envp)
 			}
 			else if (strcmp(tuple->arguments[0], "setenv") == 0)
 			{
+				printExecCommand(1, "setenv");
 				if (tuple->count == 1)
 				{
-					for (char **env = envp; *env != 0; env++)
+					for (char **env = envp; *env; env++)
 						printString(*env);
 				}
 				else if (tuple->count == 2)
@@ -208,6 +247,7 @@ int sh(int argc, char **argv, char **envp)
 			}
 			else if (strcmp(tuple->arguments[0], "kill") == 0)
 			{
+				printExecCommand(1, "kill");
 				if (tuple->count == 1 || tuple->count > 3)
 				{
 					perror("invalid number of arguments");
@@ -251,6 +291,7 @@ int sh(int argc, char **argv, char **envp)
 
 			else if (strcmp(tuple->arguments[0], "list") == 0)
 			{
+				printExecCommand(1, "list");
 				if (tuple->count == 1)
 				{
 					printf("current directory\n");
@@ -273,6 +314,7 @@ int sh(int argc, char **argv, char **envp)
 
 			else if (strcmp(tuple->arguments[0], "cd") == 0)
 			{
+				printExecCommand(1, "cd");
 				if (tuple->count > 2)
 				{
 					perror("cd: too many arguments");
@@ -301,7 +343,8 @@ int sh(int argc, char **argv, char **envp)
 								exit(2);
 							}
 						}
-						else if (strcmp(tuple->arguments[1], "-") == 0)
+
+						if (strcmp(tuple->arguments[1], "-") == 0)
 						{
 							chdir(owd);
 							free(pwd);
@@ -311,17 +354,40 @@ int sh(int argc, char **argv, char **envp)
 								exit(2);
 							}
 						}
-						else if (chdir(tuple->arguments[1]) != 0)
+
+						if (*(tuple->arguments[1]) == '/')
 						{
-							perror("chdir failed");
+							char strippedString[strlen(tuple->arguments[1])];
+							strncpy(strippedString, tuple->arguments[1] + 1, strlen(tuple->arguments[1]) - 1);
+
+							if (chdir(strippedString) != 0)
+							{
+								perror("chdir failed");
+							}
+							else
+							{
+								free(pwd);
+								if ((pwd = getcwd(NULL, PATH_MAX + 1)) == NULL)
+								{
+									perror("getcwd");
+									exit(2);
+								}
+							}
 						}
 						else
 						{
-							free(pwd);
-							if ((pwd = getcwd(NULL, PATH_MAX + 1)) == NULL)
+							if (chdir(tuple->arguments[1]) != 0)
 							{
-								perror("getcwd");
-								exit(2);
+								perror("chdir failed");
+							}
+							else
+							{
+								free(pwd);
+								if ((pwd = getcwd(NULL, PATH_MAX + 1)) == NULL)
+								{
+									perror("getcwd");
+									exit(2);
+								}
 							}
 						}
 					}
@@ -337,7 +403,7 @@ int sh(int argc, char **argv, char **envp)
 				char **expCmd;
 				if (commandStr != NULL)
 				{
-
+					printExecCommand(0, commandStr);
 					wordexp_t p;
 					char **w;
 					int wordExpIndex;
@@ -348,43 +414,25 @@ int sh(int argc, char **argv, char **envp)
 						if (index < strlen(tuple->arguments[i]))
 						{
 							wildCard = 1;
-							// printf("%s\n---------\n", tuple->arguments[i]);
 
 							wordexp(tuple->arguments[i], &p, 0);
 							w = p.we_wordv;
 							int count = i + p.we_wordc + 1;
-							// printf("%d\n", count);
 
 							expCmd = malloc(count * sizeof(*expCmd));
 							expCmd[count - 1] = NULL;
 
-							// for (size_t c = 0; c < p.we_wordc; c++)
-							// {
-							// 	printf("%s\n", w[c]);
-							// }
-							// printf("---------------------------------\n");
-
 							for (j = 0; j < i; j++)
 							{
-								// printf("%s\n", tuple->arguments[j]);
 								expCmd[j] = (char *)malloc((strlen(tuple->arguments[j]) + 1) * sizeof(char));
 								strcpy(expCmd[j], tuple->arguments[j]);
 							}
-							// printf("---------------------------------\n");
 
 							for (k = 0; k < p.we_wordc; k++)
 							{
-								// printf("%s\n", w[k]);
 								expCmd[k + i] = (char *)malloc((strlen(w[k]) + 1) * sizeof(char));
 								strcpy(expCmd[k + i], w[k]);
 							}
-							// printf("---------------------------------\n");
-
-							// for (size_t x = 0; expCmd[x] != NULL; x++)
-							// {
-							// 	printf("%s\n", expCmd[x]);
-							// }
-							// printf("---------------------------------\n");
 							wordfree(&p);
 						}
 					}
@@ -440,6 +488,7 @@ char *which(char *command, char *path)
 	/* loop through pathlist until finding command and return it.  Return
    NULL when not found. */
 
+	//printf("%s\n");
 	//check for absolute path
 	if (*command == '/' || *command == '.')
 	{
