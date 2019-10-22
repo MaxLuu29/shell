@@ -174,8 +174,7 @@ int sh(int argc, char **argv, char **envp)
 					}
 					else
 					{
-						if ((setenv(tuple->arguments[1], "", 1)) != 0)
-							perror("");
+						setenv(tuple->arguments[1], "", 1);
 					}
 				}
 				else if (tuple->count == 3)
